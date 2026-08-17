@@ -36,7 +36,7 @@ import { useWorkspaceCleanupGitEvidence } from './use-workspace-cleanup-git-evid
 import { useWorkspaceCleanupRowOrder } from './use-workspace-cleanup-row-order'
 import {
   formatVanishedSelectionNotice,
-  getDefaultSelectedWorkspaceCleanupIds,
+  formatWithheldSelectionNotice,
   toggleSetMember
 } from './workspace-cleanup-selection-model'
 
@@ -90,12 +90,7 @@ function WorkspaceCleanupDialogContent({
   const [facetPanelOpen, setFacetPanelOpen] = useState(false)
   const [expandedRowIds, setExpandedRowIds] = useState<Set<string>>(() => new Set())
   const [rowsScrollElement, setRowsScrollElement] = useState<HTMLDivElement | null>(null)
-  const selectedDefaultsScanAtRef = useRef<number | null>(null)
   const wasOpenRef = useRef(open)
-  // Why: a refresh completing mid-open must not clobber a selection the user
-  // already made (or was given) for this open — defaults apply at most once.
-  const defaultsAppliedForOpenRef = useRef(false)
-  const selectionTouchedRef = useRef(false)
   const mountedRef = useMountedRef()
 
   // Why: the facet clock must be stable across renders but never older than
@@ -105,8 +100,6 @@ function WorkspaceCleanupDialogContent({
 
   useEffect(() => {
     if (open && !wasOpenRef.current) {
-      defaultsAppliedForOpenRef.current = false
-      selectionTouchedRef.current = false
       setOpenedAt(Date.now())
     }
     wasOpenRef.current = open
@@ -183,20 +176,9 @@ function WorkspaceCleanupDialogContent({
   }, [deletingWorktreeIds, rows, selectedIds])
   const selectedCount = selectedCandidates.length
 
-  useEffect(() => {
-    if (loading || !scan || selectedDefaultsScanAtRef.current === scan.scannedAt) {
-      return
-    }
-    selectedDefaultsScanAtRef.current = scan.scannedAt
-    if (removalInFlightRef.current) {
-      return
-    }
-    if (defaultsAppliedForOpenRef.current || selectionTouchedRef.current) {
-      return
-    }
-    defaultsAppliedForOpenRef.current = true
-    setSelectedIds(getDefaultSelectedWorkspaceCleanupIds(scan.candidates, deletingWorktreeIds))
-  }, [deletingWorktreeIds, loading, removalInFlightRef, scan, setSelectedIds])
+  // Why no default selection: "ready" is Orca's verdict about the user's own
+  // work, and pre-checking rows in a destructive dialog acts on that verdict.
+  // The user decides what to delete; the dialog only reports facts.
 
   const pruneSelectionToVisibleRows = useEffectEvent(() => {
     setSelectedIds((current) => {
@@ -205,7 +187,13 @@ function WorkspaceCleanupDialogContent({
           (id) => facetRows.facetMatchedWorktreeIds.has(id) && !deletingWorktreeIds.has(id)
         )
       )
-      return next.size === current.size ? current : next
+      if (next.size === current.size) {
+        return current
+      }
+      // Why: auto-select used to refill the selection immediately, hiding this
+      // drop. With nothing pre-checked the loss is real and must be reported.
+      toast.info(formatWithheldSelectionNotice(current.size - next.size))
+      return next
     })
   })
 
@@ -278,7 +266,6 @@ function WorkspaceCleanupDialogContent({
 
   const toggleSelectedRow = useCallback(
     (worktreeId: string) => {
-      selectionTouchedRef.current = true
       setSelectedIds((current) => toggleSetMember(current, worktreeId))
     },
     [setSelectedIds]
@@ -291,9 +278,23 @@ function WorkspaceCleanupDialogContent({
         : facetRows.selectableWorktreeIds.filter((id) => !deletingWorktreeIds.has(id)),
     [deletingWorktreeIds, facetRows.selectableWorktreeIds, removal.removalInFlight]
   )
+  // Why: the header's checkbox must compare like with like. `selectedCount` is
+  // canQueue-scoped (it drives Delete), while select-all only ever selects the
+  // canSelect-scoped set — comparing them let hand-picked review rows flip the
+  // header to fully-checked, and the next click cleared the whole selection.
+  const selectedSelectableCount = useMemo(() => {
+    const selectable = new Set(selectableWorktreeIds)
+    let count = 0
+    for (const id of selectedIds) {
+      if (selectable.has(id)) {
+        count += 1
+      }
+    }
+    return count
+  }, [selectableWorktreeIds, selectedIds])
+
   const toggleSelectAll = useCallback(
     (selectAll: boolean) => {
-      selectionTouchedRef.current = true
       setSelectedIds(selectAll ? new Set(selectableWorktreeIds) : new Set())
     },
     [selectableWorktreeIds, setSelectedIds]
@@ -309,7 +310,6 @@ function WorkspaceCleanupDialogContent({
       if (removalInFlightRef.current) {
         return
       }
-      selectionTouchedRef.current = true
       setSelectedIds(new Set([candidate.worktreeId]))
       openConfirmRemove([candidate])
     },
@@ -373,7 +373,7 @@ function WorkspaceCleanupDialogContent({
               facetPanelOpen={facetPanelOpen}
               onFacetPanelOpenChange={setFacetPanelOpen}
               selectableCount={selectableWorktreeIds.length}
-              selectedCount={selectedCount}
+              selectedCount={selectedSelectableCount}
               spaceScanning={workspaceSpaceScanning}
               spaceProgress={workspaceSpaceProgress}
               gitPendingCount={gitEvidence.pendingWorktreeIds.size}
