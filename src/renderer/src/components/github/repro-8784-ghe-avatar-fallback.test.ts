@@ -46,9 +46,12 @@ describe('issue #8784 GHE avatar fallback (regression)', () => {
     // Why: author chip must not ignore API avatar_url and only pass login.
     expect(prPage).not.toMatch(/githubAvatarUrl\(workItem\.author\)/)
 
-    const taskPage = readFileSync(join(__dirname, '../TaskPage.tsx'), 'utf8')
-    expect(taskPage).toMatch(/GitHubUserAvatar/)
+    const reviewChip = readFileSync(
+      join(__dirname, '../task-page/github/github-assignee-avatars.tsx'),
+      'utf8'
+    )
+    expect(reviewChip).toMatch(/GitHubUserAvatar/)
     // Why: list chip must not hardcode github.com/{login}.png.
-    expect(taskPage).not.toMatch(/github\.com\/\$\{reviewer\.login\}\.png/)
+    expect(reviewChip).not.toMatch(/github\.com\/\$\{reviewer\.login\}\.png/)
   })
 })
