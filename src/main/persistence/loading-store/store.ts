@@ -358,6 +358,7 @@ import {
 import { hydrateRepo as hydrateRepoOperation } from '../tracking-repos/repo-hydration'
 import { RepoUpdatePersistenceOperations } from '../tracking-repos/repo-update-operations'
 import { ProjectHostSetupPersistenceOperations } from '../tracking-repos/project-host-setup-update'
+import { neutralizeStoredWorkspaceCleanupFilters } from './workspace-cleanup-filter-neutralize'
 
 // Why (issue #1158): keep 5 rolling backups at >=1h spacing so a corrupt/empty write leaves an earlier copy recoverable.
 const BACKUP_COUNT = 5
@@ -1328,12 +1329,23 @@ export class Store {
             ) {
               this.loadNeedsSave = true
             }
+            if (parsed.ui?._workspaceCleanupFiltersNeutralized !== true) {
+              this.loadNeedsSave = true
+            }
             const rawCardProps = parsed.ui?.worktreeCardProperties
             const inlineAgentsMigrated = parsed.ui?._inlineAgentsDefaultedForAllUsers === true
             const expandedCardPropsMigrated =
               parsed.ui?._expandedWorktreeCardPropertiesDefaulted === true
             const jiraIssueCardPropDefaulted =
               parsed.ui?._jiraIssueWorktreeCardPropertyDefaulted === true
+            // Why once: a wheel tick over a focused number input silently set and persisted
+            // cleanup filters (fixed at the control in #15298, but already-saved profiles
+            // stay filtered). Clear those values a single time; a deliberate re-set sticks.
+            const workspaceCleanupFiltersNeutralized =
+              parsed.ui?._workspaceCleanupFiltersNeutralized === true
+            const neutralizedWorkspaceCleanup = workspaceCleanupFiltersNeutralized
+              ? undefined
+              : neutralizeStoredWorkspaceCleanupFilters(parsed.ui?.workspaceCleanup)
             const hadExperimentOn = readDeprecatedExperimentFlag(parsed)
             const deliberateUncheck =
               hadExperimentOn &&
@@ -1473,7 +1485,13 @@ export class Store {
               _inlineAgentsDefaultedForExperiment: true,
               _inlineAgentsDefaultedForAllUsers: true,
               _expandedWorktreeCardPropertiesDefaulted: true,
-              _jiraIssueWorktreeCardPropertyDefaulted: true
+              _jiraIssueWorktreeCardPropertyDefaulted: true,
+              _workspaceCleanupFiltersNeutralized: true,
+              // Why spread and not replace: `browse` shares its object with `dismissals`,
+              // so a whole-object write would unhide every Ignored row.
+              ...(neutralizedWorkspaceCleanup
+                ? { workspaceCleanup: neutralizedWorkspaceCleanup }
+                : {})
             }
           })(),
           // Why: volatile schema; zod-validate workspaceSession at read so a bad payload falls to defaults, not a renderer crash.
