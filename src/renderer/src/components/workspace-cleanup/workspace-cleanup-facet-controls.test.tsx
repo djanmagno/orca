@@ -108,9 +108,32 @@ describe('workspace cleanup facet controls', () => {
     renderFacets(createDefaultWorkspaceCleanupFilterState(), onPatch)
 
     const input = control('Idle for at least') as HTMLInputElement | null
-    expect(input?.type).toBe('number')
     act(() => typeInto(input, '17'))
     expect(onPatch).toHaveBeenCalledWith('activity', { idleMinDays: 17 })
+  })
+
+  it('keeps every numeric threshold off type=number so a wheel tick cannot set it', () => {
+    // Why assert the type rather than dispatch a wheel event: the spinner is a
+    // Chromium behaviour happy-dom does not implement, so a dispatched wheel
+    // changes nothing here either way and the test would pass without the fix.
+    // The type is the property that makes the whole class impossible.
+    renderFacets(createDefaultWorkspaceCleanupFilterState(), createPatchMock())
+
+    const numericFacets = [
+      'Idle for at least',
+      'At least',
+      'At most',
+      'Ahead by at least',
+      'Behind by at least'
+    ]
+    const found = numericFacets
+      .map((label) => control(label) as HTMLInputElement | null)
+      .filter((input): input is HTMLInputElement => input !== null)
+    expect(found.length).toBeGreaterThan(0)
+    for (const input of found) {
+      expect(input.type).not.toBe('number')
+      expect(input.inputMode).toBe('numeric')
+    }
   })
 
   it('multi-selects git states', () => {
