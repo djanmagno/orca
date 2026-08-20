@@ -98,7 +98,7 @@ describe('native chat session option enrichment', () => {
     )
   })
 
-  it('uses only discovered Claude rows and capabilities per host', async () => {
+  it('merges seed Claude rows with discovered capabilities per host', async () => {
     mocks.discoverRuntimeCommitMessageModels.mockResolvedValue({
       success: true,
       catalogOrigin: 'probe',
@@ -135,7 +135,11 @@ describe('native chat session option enrichment', () => {
     await vi.waitFor(() => expect(listener).toHaveBeenCalledOnce())
 
     const models = readNativeChatEnrichedModels('claude', 'ssh:host')!
-    expect(models.map(({ id }) => id)).toEqual(['opus[1m]', 'sonnet'])
+    // Why: seed rows the CLI omits (e.g. fable, which needs a one-time consent
+    // before list_models advertises it) must stay selectable, so the merge keeps
+    // every seed id and overlays discovered rows on top.
+    expect(models.map(({ id }) => id)).toEqual(['fable', 'opus', 'sonnet', 'haiku', 'opus[1m]'])
+    expect(models.some((model) => model.id === 'not-a-real-model')).toBe(false)
     const sonnetEffort = models.find(({ id }) => id === 'sonnet')?.options[0]
     expect(sonnetEffort?.kind).toMatchObject({
       type: 'select',
@@ -158,6 +162,50 @@ describe('native chat session option enrichment', () => {
       ]
     })
     expect(readNativeChatEnrichedModels('claude', 'local')).toBeNull()
+  })
+
+  it('keeps a single Fable row with the probe’s option menu when the CLI lists it', async () => {
+    mocks.discoverRuntimeCommitMessageModels.mockResolvedValue({
+      success: true,
+      catalogOrigin: 'probe',
+      models: [
+        {
+          id: 'fable',
+          label: 'Fable',
+          thinkingLevels: [
+            { id: 'high', label: 'High' },
+            { id: 'max', label: 'Max' }
+          ],
+          defaultThinkingLevel: 'high',
+          supportsFastMode: true
+        },
+        {
+          id: 'sonnet',
+          label: 'Sonnet',
+          thinkingLevels: [{ id: 'medium', label: 'Medium' }]
+        }
+      ]
+    })
+    const discover = vi.fn(() =>
+      discoverNativeChatCatalogModels('claude', {
+        settings: {},
+        worktreeId: 'repo::/worktree',
+        worktreePath: '/worktree'
+      })
+    )
+    ensureNativeChatModelEnrichment({ agent: 'claude', hostKey: 'local', discover })
+    await vi.waitFor(() => expect(readNativeChatEnrichedModels('claude', 'local')).not.toBeNull())
+
+    const models = readNativeChatEnrichedModels('claude', 'local')!
+    const fables = models.filter((model) => model.id === 'fable')
+    expect(fables).toHaveLength(1)
+    expect(models.map(({ id }) => id)).toEqual(['fable', 'opus', 'sonnet', 'haiku'])
+    expect(fables[0].options.map(({ id }) => id)).toEqual(['effort', 'fastMode'])
+    const effort = fables[0].options[0]
+    expect(effort.kind.type === 'select' ? effort.kind.choices.map((c) => c.value) : []).toEqual([
+      'high',
+      'max'
+    ])
   })
 
   it('carries grok’s probed default through discovery to the published rows', async () => {
@@ -222,7 +270,7 @@ describe('native chat session option enrichment', () => {
     expect(published[0]!.isDefault).toBeUndefined()
   })
 
-  it('rejects a spec fallback for grok too, not just claude', async () => {
+  it('rejects a spec fallback for grok, whose probe replaces the seed', async () => {
     // Grok's list replaces the seed rather than extending it, so letting a static
     // fallback through would retire real models and blank the picker.
     mocks.discoverRuntimeCommitMessageModels.mockResolvedValue({
@@ -302,7 +350,7 @@ describe('native chat session option enrichment', () => {
     ).toEqual({ model: 'retired' })
   })
 
-  it('does not advertise the Claude spec fallback when probing is unavailable', async () => {
+  it('lets a spec fallback through for Claude, which merges onto the seed', async () => {
     mocks.discoverRuntimeCommitMessageModels.mockResolvedValue({
       success: true,
       catalogOrigin: 'spec',
@@ -315,6 +363,6 @@ describe('native chat session option enrichment', () => {
         worktreeId: 'repo::/worktree',
         worktreePath: '/worktree'
       })
-    ).resolves.toBeNull()
+    ).resolves.toEqual([{ id: 'sonnet', label: 'Sonnet', options: [] }])
   })
 })

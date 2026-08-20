@@ -166,7 +166,7 @@ describe('discoverCommitMessageModelsLocal', () => {
       success: true,
       catalogOrigin: 'spec',
       defaultModelId: 'sonnet',
-      models: [{ id: 'haiku' }, { id: 'sonnet' }, { id: 'opus' }]
+      models: [{ id: 'fable' }, { id: 'haiku' }, { id: 'sonnet' }, { id: 'opus' }]
     })
   })
 

@@ -80,8 +80,7 @@ export async function discoverNativeChatCatalogModels(
     result.models.length === 0 ||
     // Why: a spec's static fallback list must never pass as a probe result for an
     // agent whose published list replaces rather than extends the seed.
-    ((agent === 'claude' || catalog?.discoveredModelsAreAuthoritative) &&
-      result.catalogOrigin !== 'probe')
+    (catalog?.discoveredModelsAreAuthoritative && result.catalogOrigin !== 'probe')
   ) {
     return null
   }

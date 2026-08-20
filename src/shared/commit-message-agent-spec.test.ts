@@ -46,6 +46,29 @@ describe('COMMIT_MESSAGE_AGENT_SPECS', () => {
     expect(COMMIT_MESSAGE_AGENT_SPECS.pi?.defaultModelId).toBe('github-copilot/gpt-5.4-mini')
   })
 
+  it('includes Fable in the Claude fallback catalog', () => {
+    expect(COMMIT_MESSAGE_AGENT_SPECS.claude?.models.map((model) => model.id)).toEqual([
+      'fable',
+      'haiku',
+      'sonnet',
+      'opus'
+    ])
+    expect(COMMIT_MESSAGE_AGENT_SPECS.claude?.models.find((model) => model.id === 'fable')).toEqual(
+      {
+        id: 'fable',
+        label: 'Fable',
+        thinkingLevels: [
+          { id: 'low', label: 'Low' },
+          { id: 'medium', label: 'Medium' },
+          { id: 'high', label: 'High' },
+          { id: 'xhigh', label: 'Extra High' },
+          { id: 'max', label: 'Max' }
+        ],
+        defaultThinkingLevel: 'high'
+      }
+    )
+  })
+
   it('uses --prompt (not Claude --print) for Kimi non-interactive generation', () => {
     // Why: kimi-code 0.31+ rejects --print; non-interactive mode is --prompt/-p (#11669).
     const spec = COMMIT_MESSAGE_AGENT_SPECS.kimi

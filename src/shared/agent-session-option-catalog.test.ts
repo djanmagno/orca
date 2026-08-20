@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { getAgentSessionOptionCatalog, mergeCatalogModels } from './agent-session-option-catalog'
+import {
+  createClaudeCatalogOptions,
+  getAgentSessionOptionCatalog,
+  mergeCatalogModels
+} from './agent-session-option-catalog'
 import { resolveAgentSessionOptionLaunch } from './agent-session-option-launch'
 import {
   resolveNativeChatSessionOptionDefaults,
@@ -119,6 +123,29 @@ describe('agent session option catalog', () => {
     expect(sonnet.description).toBe('Sonnet 5 · Efficient')
     expect(sonnet.isDefault).toBe(true)
     expect(sonnet.options.map(({ id }) => id)).toEqual(['effort'])
+    expect(merged.some((model) => model.id === 'not-a-real-model')).toBe(false)
+  })
+
+  it('lets a discovered option menu replace the seed when the probe actually sent one', () => {
+    const catalog = getAgentSessionOptionCatalog('claude')!
+    const liveFable = {
+      id: 'fable',
+      label: 'Fable (live)',
+      options: createClaudeCatalogOptions({
+        effortLevelIds: ['high', 'max'],
+        supportsFastMode: true
+      })
+    }
+    const merged = mergeCatalogModels(catalog.models, [liveFable])
+    const fables = merged.filter((model) => model.id === 'fable')
+    expect(fables).toHaveLength(1)
+    expect(fables[0]).toMatchObject({ label: 'Fable (live)' })
+    expect(fables[0].options.map(({ id }) => id)).toEqual(['effort', 'fastMode'])
+    const effort = fables[0].options[0]
+    expect(effort.kind.type === 'select' ? effort.kind.choices.map((c) => c.value) : []).toEqual([
+      'high',
+      'max'
+    ])
   })
 
   it('parses Cursor model discovery without treating headings as models', () => {
