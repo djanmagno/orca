@@ -12,6 +12,7 @@ import {
 } from '../../../native-chat/transcript-watch'
 import { defineMethod, defineStreamingMethod, type RpcAnyMethod, type RpcContext } from '../core'
 import { sanitizeNativeChatRpcImageBlock } from './native-chat-rpc-image-block'
+import { TRANSCRIPT_UNVERIFIABLE_MESSAGE } from '../../../native-chat/transcript-host-verdict'
 
 // Why: native chat renders an agent's own transcript (Claude/Codex JSONL). The
 // desktop reaches the readers via Electron IPC; mobile/web clients reach the
@@ -285,6 +286,7 @@ export const NATIVE_CHAT_METHODS: readonly RpcAnyMethod[] = [
             hasMore,
             beforeOffset,
             ...(error ? { error } : {}),
+            ...(error === TRANSCRIPT_UNVERIFIABLE_MESSAGE ? { unverifiable: true } : {}),
             ...(lifecycle ? { lifecycle } : {})
           })
         },

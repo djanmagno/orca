@@ -5,6 +5,7 @@ import type {
   NativeChatTurnLifecycle
 } from '../../shared/native-chat-types'
 import { clearNativeChatTranscriptCache } from '../native-chat/transcript-read-cache'
+import { TRANSCRIPT_UNVERIFIABLE_MESSAGE } from '../native-chat/transcript-host-verdict'
 import type { ReadTranscriptResult } from '../native-chat/transcript-reader'
 import {
   subscribeNativeChatTranscript,
@@ -63,6 +64,7 @@ export type NativeChatAppendedPayload = {
         messages: NativeChatMessage[]
         hasMore: boolean
         error?: string
+        unverifiable?: true
         lifecycle?: NativeChatTurnLifecycle
       }
     | {
@@ -194,6 +196,7 @@ async function handleSubscribe(event: IpcMainEvent, args: NativeChatSubscribeArg
           messages,
           hasMore,
           ...(error ? { error } : {}),
+          ...(error === TRANSCRIPT_UNVERIFIABLE_MESSAGE ? { unverifiable: true } : {}),
           ...(lifecycle ? { lifecycle } : {})
         }
       }

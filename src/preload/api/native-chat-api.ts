@@ -10,7 +10,7 @@ export type NativeChatReadSessionResult =
       messages: NativeChatMessage[]
       lifecycle?: NativeChatTurnLifecycle
     }
-  | { error: string; notFound?: true }
+  | { error: string; notFound?: true; unverifiable?: true }
 
 /** Messages appended to a live-tailed transcript since the previous emit. */
 export type NativeChatAppendedMessages = NativeChatMessage[]
@@ -21,6 +21,7 @@ export type NativeChatSubscriptionFrame =
       messages: NativeChatMessage[]
       hasMore: boolean
       error?: string
+      unverifiable?: true
       lifecycle?: NativeChatTurnLifecycle
     }
   | {

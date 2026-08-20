@@ -12,9 +12,11 @@ import type {
 } from './transcript-watch-contract'
 import { nativeChatLineDecoderForAgent } from './transcript-tail-reader'
 import { WslTranscriptFsError, wslTranscriptFsRefusal } from './wsl-transcript-fs-gate'
+import { resolveNativeChatSshOwner } from './ssh-transcript-owner'
+import { subscribeSshNativeChatTranscript } from './ssh-transcript-subscription'
 
 export { readNativeChatTranscriptTail } from './transcript-tail-reader'
-export { getActiveNativeChatWatcherCount } from './transcript-watch-engine'
+export { getActiveNativeChatWatcherCount } from './transcript-watch-probe'
 export type {
   NativeChatTranscriptSubscription,
   SubscribeNativeChatTranscriptArgs
@@ -218,6 +220,12 @@ export async function subscribeNativeChatTranscript(
   // instead of resolve-polling an unresolvable target forever.
   if (!args.filePath && !args.sessionId.trim()) {
     return { unsubscribe: () => {}, watching: false }
+  }
+  if (!args.filePath) {
+    const sshOwner = resolveNativeChatSshOwner(args)
+    if (sshOwner) {
+      return subscribeSshNativeChatTranscript(sshOwner, args, setupSignal)
+    }
   }
 
   let installed: NativeChatTranscriptSubscription | null

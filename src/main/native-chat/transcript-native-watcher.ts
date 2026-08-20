@@ -15,6 +15,15 @@ export type TranscriptNativeWatcher = {
  * can fail on otherwise-readable remote filesystems, so binding is retryable
  * and never owns transcript liveness; the caller's polling loop does.
  */
+export function createIdleTranscriptNativeWatcher(): TranscriptNativeWatcher {
+  return {
+    bind: () => false,
+    invalidate: () => {},
+    needsRebind: () => false,
+    dispose: () => {}
+  }
+}
+
 export function createTranscriptNativeWatcher(
   filePath: string,
   onEvent: () => void,
