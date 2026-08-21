@@ -4471,7 +4471,7 @@ const api = {
         transcriptPath,
         providerSession
       }),
-    /** Start live tailing; onAppended fires with only newly-appended messages. Returns an unsubscribe fn that closes the watcher. */
+    /** Start live tailing; `onFrame` receives snapshots, replacements, and appends. */
     subscribe: (
       args: {
         subscriptionId: string
