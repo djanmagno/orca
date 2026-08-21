@@ -388,6 +388,35 @@ describe('orchestration RPC methods', () => {
       expect(runtime.sendTerminalAgentPrompt).not.toHaveBeenCalled()
     })
 
+    it('does not report dispatch_input accepted when the prompt write was not submitted', async () => {
+      setup()
+      mockCurrentWorkerStart()
+      vi.mocked(runtime.sendTerminalAgentPrompt).mockResolvedValueOnce({
+        handle: 'term_worker',
+        accepted: false,
+        bytesWritten: 7348
+      })
+      const task = db.createTask({ spec: 'unsubmitted paste blob' })
+
+      const result = (await call('orchestration.workerStart', {
+        task: task.id,
+        from: 'term_coord',
+        agent: 'codex'
+      })) as {
+        state: string
+        failedStage?: string
+        effects: { kind: string; state?: string }[]
+      }
+
+      expect(result.state).toBe('failed')
+      expect(result.failedStage).toBe('dispatch_input')
+      expect(result.effects).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ kind: 'dispatch_input', state: 'accepted' })
+        ])
+      )
+    })
+
     it('preserves the exact attached terminal when task input is rejected', async () => {
       setup()
       mockCurrentWorkerStart()

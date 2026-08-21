@@ -1,5 +1,9 @@
 export const AGENT_PROMPT_EFFECT_TIMEOUT_MS = 5_000
 const AGENT_PROMPT_EFFECT_POLL_MS = 50
+// Why: framed paste and Enter must not share a PTY write; this is the same
+// settle native chat uses between an image paste and the following submit.
+export const AGENT_PROMPT_SUBMIT_RETRY_SETTLE_MS = 300
+export const AGENT_PROMPT_SUBMIT_RETRY_LIMIT = 2
 
 export type AgentPromptActivity = Readonly<{
   generation: number
@@ -11,6 +15,8 @@ export type AgentPromptActivity = Readonly<{
 type AgentPromptVerificationOptions = {
   baseline: AgentPromptActivity
   readActivity: () => AgentPromptActivity
+  hasUnsubmittedPaste?: () => boolean
+  resubmit?: () => boolean
   signal?: AbortSignal
 }
 
@@ -21,23 +27,49 @@ export async function verifyAgentPromptSubmission(
   assertPromptNotBlocked(options.baseline, options.baseline)
 
   const deadline = Date.now() + AGENT_PROMPT_EFFECT_TIMEOUT_MS
+  let retries = 0
+  let lastSubmitAt = Date.now()
   while (Date.now() < deadline) {
-    const current = options.readActivity()
-    assertSamePromptGeneration(options.baseline, current)
-    assertPromptNotBlocked(options.baseline, current)
-    if (agentPromptLifecycleChanged(options.baseline, current)) {
+    if (promptSubmissionTookEffect(options)) {
       return
+    }
+    if (shouldRetryUnsubmittedPaste(options, retries, lastSubmitAt)) {
+      if (!options.resubmit?.()) {
+        throw new Error('terminal_not_writable')
+      }
+      retries += 1
+      lastSubmitAt = Date.now()
     }
     await waitForAgentPromptPoll(options.signal)
   }
 
-  const current = options.readActivity()
-  assertSamePromptGeneration(options.baseline, current)
-  assertPromptNotBlocked(options.baseline, current)
-  if (agentPromptLifecycleChanged(options.baseline, current)) {
+  if (promptSubmissionTookEffect(options)) {
     return
   }
   throw new Error('agent_prompt_stalled')
+}
+
+function promptSubmissionTookEffect(options: AgentPromptVerificationOptions): boolean {
+  const current = options.readActivity()
+  assertSamePromptGeneration(options.baseline, current)
+  assertPromptNotBlocked(options.baseline, current)
+  return (
+    agentPromptLifecycleChanged(options.baseline, current) &&
+    options.hasUnsubmittedPaste?.() !== true
+  )
+}
+
+function shouldRetryUnsubmittedPaste(
+  options: AgentPromptVerificationOptions,
+  retries: number,
+  lastSubmitAt: number
+): boolean {
+  return (
+    options.hasUnsubmittedPaste?.() === true &&
+    options.resubmit != null &&
+    retries < AGENT_PROMPT_SUBMIT_RETRY_LIMIT &&
+    Date.now() - lastSubmitAt >= AGENT_PROMPT_SUBMIT_RETRY_SETTLE_MS
+  )
 }
 
 function agentPromptLifecycleChanged(

@@ -19,6 +19,7 @@ import {
   persistWorkerSetupWaitOutcome
 } from './orchestration-worker-setup-gate'
 import { failWorkerStartWithReceipt } from './orchestration-worker-start-receipt'
+import { requireAgentPromptSendAccepted } from '../../orchestration/agent-prompt-send-accepted'
 import { prepareLocalWorkerStart } from './orchestration-worker-start-validation'
 
 export const ORCHESTRATION_WORKER_START_METHODS: RpcMethod[] = [
@@ -231,7 +232,8 @@ export const ORCHESTRATION_WORKER_START_METHODS: RpcMethod[] = [
           devMode: params.devMode,
           cliCommand: runtime.getTerminalOrchestrationCliCommand(terminalHandle)
         })
-        await runtime.sendTerminalAgentPrompt(terminalHandle, preamble)
+        const send = await runtime.sendTerminalAgentPrompt(terminalHandle, preamble)
+        requireAgentPromptSendAccepted(send)
         effects.push({
           kind: 'dispatch_input',
           role: 'agent',

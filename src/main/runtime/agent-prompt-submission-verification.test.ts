@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   AGENT_PROMPT_EFFECT_TIMEOUT_MS,
+  AGENT_PROMPT_SUBMIT_RETRY_SETTLE_MS,
   type AgentPromptActivity,
   verifyAgentPromptSubmission
 } from './agent-prompt-submission-verification'
@@ -136,6 +137,46 @@ describe('agent prompt submission verification', () => {
         readActivity: () => activity({ generation: 2 })
       })
     ).rejects.toThrow('terminal_handle_stale')
+  })
+
+  it('does not accept a working transition while an unsubmitted paste blob remains', async () => {
+    vi.useFakeTimers()
+    let current = activity()
+    const verification = verifyAgentPromptSubmission({
+      baseline: current,
+      readActivity: () => current,
+      hasUnsubmittedPaste: () => true
+    })
+    const rejected = expect(verification).rejects.toThrow('agent_prompt_stalled')
+
+    current = activity({ workingSequence: 5, status: 'working' })
+    await vi.advanceTimersByTimeAsync(AGENT_PROMPT_EFFECT_TIMEOUT_MS)
+
+    await rejected
+  })
+
+  it('retries a distinct submit while the paste blob remains, then accepts once it clears', async () => {
+    vi.useFakeTimers()
+    let current = activity()
+    let blob = true
+    let submits = 0
+    const verification = verifyAgentPromptSubmission({
+      baseline: current,
+      readActivity: () => current,
+      hasUnsubmittedPaste: () => blob,
+      resubmit: () => {
+        submits += 1
+        blob = false
+        current = activity({ workingSequence: 5, status: 'working' })
+        return true
+      }
+    })
+
+    await vi.advanceTimersByTimeAsync(AGENT_PROMPT_SUBMIT_RETRY_SETTLE_MS)
+    await vi.advanceTimersByTimeAsync(50)
+
+    await expect(verification).resolves.toBeUndefined()
+    expect(submits).toBe(1)
   })
 
   it('cancels while waiting for activity', async () => {

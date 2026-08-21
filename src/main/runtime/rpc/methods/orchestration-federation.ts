@@ -18,6 +18,7 @@ import {
 import { FederationAttachStartParams } from './orchestration-federation-start-schema'
 import { failFederatedAttachmentWithReceipt } from './orchestration-federation-start-receipt'
 import { prepareFederationAttachmentWorkerStart } from './orchestration-worker-start-validation'
+import { requireAgentPromptSendAccepted } from '../../orchestration/agent-prompt-send-accepted'
 
 export const ORCHESTRATION_FEDERATION_ATTACH_METHODS: RpcMethod[] = [
   defineMethod({
@@ -225,7 +226,7 @@ export const ORCHESTRATION_FEDERATION_ATTACH_METHODS: RpcMethod[] = [
           effects
         })
         failedStage = 'dispatch_input'
-        await runtime.sendTerminalAgentPrompt(
+        const send = await runtime.sendTerminalAgentPrompt(
           terminalHandle,
           buildDispatchPreamble({
             taskId: params.taskId,
@@ -238,6 +239,7 @@ export const ORCHESTRATION_FEDERATION_ATTACH_METHODS: RpcMethod[] = [
             cliCommand: runtime.getTerminalOrchestrationCliCommand(terminalHandle)
           })
         )
+        requireAgentPromptSendAccepted(send)
         effects.push({
           kind: 'dispatch_input',
           role: 'agent',

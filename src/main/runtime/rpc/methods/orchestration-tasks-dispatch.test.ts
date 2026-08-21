@@ -291,6 +291,29 @@ describe('orchestration RPC methods', () => {
       ).rejects.toThrow('only ready tasks can be dispatched')
     })
 
+    it('does not report injected when the prompt write was not submitted', async () => {
+      setup()
+      provideInjectIdentity()
+      const task = db.createTask({ spec: 'work' })
+      vi.spyOn(runtime, 'isTerminalRunningAgent').mockResolvedValue(true)
+      vi.spyOn(runtime, 'sendTerminalAgentPrompt').mockResolvedValue({
+        handle: 'term_a',
+        accepted: false,
+        bytesWritten: 4508
+      })
+
+      await expect(
+        call('orchestration.dispatch', {
+          task: task.id,
+          to: 'term_a',
+          inject: true
+        })
+      ).rejects.toThrow('agent_prompt_stalled')
+
+      expect(db.getTask(task.id)?.status).toBe('ready')
+      expect(db.getActiveDispatchForTerminal('term_a')).toBeUndefined()
+    })
+
     it('rolls back active dispatch when injection fails', async () => {
       setup()
       provideInjectIdentity()

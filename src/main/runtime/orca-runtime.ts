@@ -102,6 +102,10 @@ import {
   buildAgentPromptPasteBytes
 } from '../../shared/agent-prompt-injection'
 import {
+  isUnsubmittedAgentPasteBlob,
+  observeUnsubmittedAgentPasteBlob
+} from '../../shared/agent-prompt-paste-blob'
+import {
   type AgentPromptActivity,
   verifyAgentPromptSubmission
 } from './agent-prompt-submission-verification'
@@ -2064,28 +2068,6 @@ async function waitForAgentPromptPromise<T>(promise: Promise<T>, signal?: AbortS
       (value) => finish({ value }),
       (error: unknown) => finish({ error })
     )
-  })
-}
-
-async function waitForAgentPromptDelay(delayMs: number, signal?: AbortSignal): Promise<void> {
-  if (!signal) {
-    await new Promise((resolve) => setTimeout(resolve, delayMs))
-    return
-  }
-  assertAgentPromptRequestActive(signal)
-  await new Promise<void>((resolve, reject) => {
-    const onAbort = (): void => {
-      clearTimeout(timer)
-      reject(new Error('request_aborted'))
-    }
-    const timer = setTimeout(() => {
-      signal.removeEventListener('abort', onAbort)
-      resolve()
-    }, delayMs)
-    signal.addEventListener('abort', onAbort, { once: true })
-    if (signal.aborted) {
-      onAbort()
-    }
   })
 }
 
@@ -19407,7 +19389,7 @@ export class OrcaRuntimeService {
         renderGate.dispose()
       }
     } else {
-      await waitForAgentPromptDelay(AGENT_PROMPT_SUBMIT_DELAY_MS, options.signal)
+      await this.waitForAgentPromptPasteIngest(ptyId, options.signal)
     }
     assertAgentPromptRequestActive(options.signal)
     this.assertAgentPromptGeneration(ptyId, generation)
@@ -19427,12 +19409,78 @@ export class OrcaRuntimeService {
     if (!suffixWrote) {
       throw new Error(options.suffixFailureError ?? 'terminal_not_writable')
     }
+    let submits = 1
     await verifyAgentPromptSubmission({
       baseline,
       readActivity: () => this.getAgentPromptActivity(handle, ptyId),
+      hasUnsubmittedPaste: () => this.hasUnsubmittedAgentPasteBlob(ptyId),
+      resubmit: () => {
+        assertAgentPromptRequestActive(options.signal)
+        this.assertAgentPromptGeneration(ptyId, generation)
+        this.assertAgentPromptPermissionSafe(
+          permissionBaseline,
+          this.getAgentPromptActivity(handle, ptyId)
+        )
+        const retried = this.ptyController?.write(ptyId, AGENT_PROMPT_SUBMIT) ?? false
+        if (retried) {
+          submits += 1
+        }
+        return retried
+      },
       signal: options.signal
     })
-    return 1
+    return submits
+  }
+
+  private hasUnsubmittedAgentPasteBlob(ptyId: string): boolean {
+    const pty = this.ptysById.get(ptyId)
+    return pty != null && isUnsubmittedAgentPasteBlob(pty.preview)
+  }
+
+  // Why: Codex collapses a large paste into `[Pasted Content N chars]` only after
+  // ingest; an earlier Enter is absorbed. Wait for that marker, else the usual delay.
+  private async waitForAgentPromptPasteIngest(ptyId: string, signal?: AbortSignal): Promise<void> {
+    if (this.hasUnsubmittedAgentPasteBlob(ptyId)) {
+      return
+    }
+    assertAgentPromptRequestActive(signal)
+    await new Promise<void>((resolve, reject) => {
+      let settled = false
+      let pasteBlobCarry = ''
+      const finish = (): void => {
+        if (settled) {
+          return
+        }
+        settled = true
+        clearTimeout(timer)
+        unsubscribe()
+        signal?.removeEventListener('abort', onAbort)
+        resolve()
+      }
+      const onAbort = (): void => {
+        if (settled) {
+          return
+        }
+        settled = true
+        clearTimeout(timer)
+        unsubscribe()
+        reject(new Error('request_aborted'))
+      }
+      const unsubscribe = this.subscribeToTerminalData(ptyId, (data) => {
+        const pasteBlob = observeUnsubmittedAgentPasteBlob(pasteBlobCarry, data)
+        pasteBlobCarry = pasteBlob.carry
+        if (pasteBlob.detected) {
+          finish()
+        }
+      })
+      const timer = setTimeout(finish, AGENT_PROMPT_SUBMIT_DELAY_MS)
+      if (signal) {
+        signal.addEventListener('abort', onAbort, { once: true })
+        if (signal.aborted) {
+          onAbort()
+        }
+      }
+    })
   }
 
   private async serializeAgentPromptSubmission<T>(
@@ -19522,6 +19570,7 @@ export class OrcaRuntimeService {
     let canSettle = false
     let settled = false
     let markerCarry = ''
+    let pasteBlobCarry = ''
     let quietTimer: NodeJS.Timeout | null = null
     let hardTimer: NodeJS.Timeout | null = null
     let resolveRender!: () => void
@@ -19560,6 +19609,13 @@ export class OrcaRuntimeService {
       if (!armed || settled) {
         return
       }
+      const pasteBlob = observeUnsubmittedAgentPasteBlob(pasteBlobCarry, data)
+      pasteBlobCarry = pasteBlob.carry
+      if (pasteBlob.detected) {
+        // Why: the blob is the TUI's ingest signal; quiet-window timing is not.
+        finish()
+        return
+      }
       if (!canSettle) {
         const combined = markerCarry + data
         markerCarry = combined.slice(-(AGENT_PROMPT_RENDER_MARKER.length - 1))
@@ -19576,6 +19632,7 @@ export class OrcaRuntimeService {
       arm: () => {
         armed = true
         markerCarry = ''
+        pasteBlobCarry = ''
         armHardTimer()
       },
       wait: async () => {
