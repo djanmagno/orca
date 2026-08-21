@@ -157,6 +157,27 @@ describe('native chat SSH transcript routing', () => {
     expect(mocks.getProvider).toHaveBeenCalledWith(CONNECTION_ID)
   })
 
+  // STA-4617: Orca Mobile reaches the same transcript through nativeChat.readSession,
+  // so an SSH-hosted Claude session showed "Start a chat with Claude" on mobile while
+  // Codex looked fine (its rollout filename still embeds the session id). Nothing about
+  // this routing is desktop-only - lock that in so a future client-scoped branch cannot
+  // quietly send mobile back to the desktop home.
+  it('routes the same SSH transcript for a mobile client, not just the desktop', async () => {
+    const files = new Map([[REMOTE_PATH, Buffer.from(`${claudeLine}\n`)]])
+    mocks.getSnapshot.mockReturnValue([sshHookRow()])
+    mocks.getProvider.mockReturnValue(memoryFilesystem(files))
+
+    const result = await readNativeChatTranscriptTail({
+      agent: 'claude',
+      sessionId: SESSION_ID,
+      transcriptPath: REMOTE_PATH,
+      limit: 40
+    })
+
+    expect(result).toMatchObject({ messages: [{ id: 'a-ssh' }], hasMore: false })
+    expect(mocks.getProvider).toHaveBeenCalledWith(CONNECTION_ID)
+  })
+
   it('keeps a local transcript path working when no SSH owner exists', async () => {
     const root = await mkdtemp(join(tmpdir(), 'orca-native-chat-local-'))
     tempRoots.push(root)
