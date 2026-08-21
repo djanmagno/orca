@@ -1,3 +1,4 @@
+import { separateImagePasteFromFollowingText } from '../../../src/shared/image-paste-following-text'
 import type { RpcClient } from '../transport/rpc-client'
 import {
   buildMobileImagePastePayload,
@@ -45,9 +46,9 @@ export async function attachMobileImageToTerminal(
   const imagePath = await saveMobileClipboardImageAsTempFile(client, picked.base64, {
     connectionId
   })
-  // Why: a generated image path is terminal image injection, so it's always
-  // bracketed (matching desktop paste) regardless of terminal mode.
-  const payload = buildMobileImagePastePayload(imagePath)
+  // Why: generated image paths are always bracketed (matching desktop paste).
+  // Trailing space so later typed/sent text cannot glue onto `.png`.
+  const payload = separateImagePasteFromFollowingText(buildMobileImagePastePayload(imagePath), true)
   if (beforeTerminalSend && !(await beforeTerminalSend(terminal))) {
     return false
   }

@@ -182,7 +182,7 @@ describe('useMobileNativeChatImageAttachments', () => {
     expect(sendCalls).toHaveLength(2)
     expect(sendCalls[0]?.params).toMatchObject({ text: '\x15', enter: false })
     expect(sendCalls[1]?.params).toMatchObject({
-      text: '\x1b[200~/tmp/a.png\x1b[201~',
+      text: '\x1b[200~/tmp/a.png\x1b[201~ ',
       enter: false
     })
     // Clear, then paste, then settle, then the text send — in that order.
@@ -293,6 +293,7 @@ describe('useMobileNativeChatImageAttachments', () => {
     const sendCalls = client.calls.filter((c) => c.method === 'terminal.send')
     // Only the clear + image paste hit the wire here; baseSend owns the submit.
     expect(sendCalls).toHaveLength(2)
+    expect(sendCalls[1]?.params.text).toBe('\x1b[200~/tmp/a.png\x1b[201~')
     expect(hook!.attachments).toEqual([])
   })
 

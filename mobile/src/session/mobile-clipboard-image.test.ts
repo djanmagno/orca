@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { joinImagePastesAndPrompt } from '../../../src/shared/image-paste-following-text'
 import {
   buildMobileImagePastePayload,
   computeMobileClipboardImageDownscale,
@@ -152,6 +153,34 @@ describe('mobile clipboard image paste helpers', () => {
   it('brackets generated image paths before sending to the terminal', () => {
     expect(buildMobileImagePastePayload('/tmp/orca.png')).toBe('\x1b[200~/tmp/orca.png\x1b[201~')
     expect(buildMobileImagePastePayload('/tmp/\x1b.png')).toBe('\x1b[200~/tmp/\u241b.png\x1b[201~')
+  })
+})
+
+describe('mobile image paste joined with prompt text', () => {
+  it('produces a correctly separated command for an attachment plus prompt', () => {
+    const image = buildMobileImagePastePayload(
+      '/var/folders/25/xk3307ps7552prstq_2qr7080000gn/T/orca-paste-1787125253634-23d021a8-a8ee-48fc-b58b-a871566da2e8.png'
+    )
+    const prompt =
+      'add the QR code for wechat group 8 next to group 7. saying if group 7 is full can join group 8'
+    expect(joinImagePastesAndPrompt([image], prompt)).toBe(`${image} ${prompt}`)
+    expect(joinImagePastesAndPrompt([image], prompt)).not.toContain('da2e8.pngadd')
+  })
+
+  it('keeps an attachment with no prompt as the framed path', () => {
+    const image = buildMobileImagePastePayload('/tmp/orca-paste.png')
+    expect(joinImagePastesAndPrompt([image], '')).toBe(image)
+  })
+
+  it('leaves prompt text with no attachment unchanged', () => {
+    expect(joinImagePastesAndPrompt([], 'just the prompt')).toBe('just the prompt')
+  })
+
+  it('separates multiple attachments from each other and from the prompt', () => {
+    const a = buildMobileImagePastePayload('/tmp/a.png')
+    const b = buildMobileImagePastePayload('/tmp/b.png')
+    expect(joinImagePastesAndPrompt([a, b], 'hello')).toBe(`${a} ${b} hello`)
+    expect(joinImagePastesAndPrompt([a, b], '')).toBe(`${a} ${b}`)
   })
 })
 
