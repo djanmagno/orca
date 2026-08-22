@@ -277,8 +277,7 @@ export function getAgentResumeArgv(
       return providerSession.key === 'session_id'
         ? ['omp', '--resume', ompResumeFilePath?.trim() || id]
         : null
-    // Why: Kimi sessions are work-dir-scoped, so this only resumes from the pane's
-    // own cwd — which is where restore relaunches it.
+    // Why: Kimi resumes by id with --session; sessions are work-dir-scoped (enforced by callers).
     case 'kimi':
       return providerSession.key === 'session_id' ? ['kimi', '--session', id] : null
   }
