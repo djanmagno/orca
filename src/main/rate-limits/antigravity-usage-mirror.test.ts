@@ -43,13 +43,21 @@ describe('deriveAntigravityRateLimits', () => {
     expect(antigravity.weekly).toBeNull()
   })
 
+  it('does not blame a missing sign-in when the quota read itself failed', () => {
+    const antigravity = deriveAntigravityRateLimits(geminiSnapshot('error', 'Token refresh failed'))
+
+    // Why: the reported symptom is a connected sign-in whose Code Assist read failed.
+    expect(antigravity.error).toContain('could not be read right now')
+    expect(antigravity.error).not.toContain('sign-in is connected')
+  })
+
   it('keeps the Gemini timestamp so activation freshness checks are not forced to refetch', () => {
     const antigravity = deriveAntigravityRateLimits(geminiSnapshot('error', 'Token refresh failed'))
 
     expect(antigravity.updatedAt).toBe(1_700_000_000_000)
   })
 
-  it('uses the same Antigravity copy when the Gemini opt-in is off', () => {
+  it('points at the missing sign-in when the Gemini opt-in is off', () => {
     const antigravity = deriveAntigravityRateLimits(
       geminiSnapshot('unavailable', 'Gemini CLI OAuth is disabled in settings')
     )
@@ -57,5 +65,6 @@ describe('deriveAntigravityRateLimits', () => {
     expect(antigravity.status).toBe('unavailable')
     expect(antigravity.error).not.toContain('Gemini CLI OAuth is disabled in settings')
     expect(antigravity.error).toContain('Antigravity usage is not available')
+    expect(antigravity.error).toContain('Gemini CLI sign-in is connected')
   })
 })
