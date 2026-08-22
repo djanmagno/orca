@@ -58,6 +58,43 @@ describe('dropIncoherentCondaActivationEnv', () => {
     })
   })
 
+  it('drops the group when a stack slot below the top prefix went missing', () => {
+    // Why: `conda deactivate` at CONDA_SHLVL=2 reads CONDA_PREFIX_1, so this shape
+    // raises the same TypeError as a missing CONDA_PREFIX — verified against conda.
+    const env: Record<string, string> = {
+      CONDA_SHLVL: '3',
+      CONDA_PREFIX: '/opt/miniconda3/envs/ml',
+      CONDA_PREFIX_2: '/opt/miniconda3/envs/tools',
+      CONDA_DEFAULT_ENV: 'ml',
+      CONDA_EXE: '/opt/miniconda3/bin/conda'
+    }
+
+    dropIncoherentCondaActivationEnv(env, 'linux')
+
+    expect(env).toEqual({ CONDA_EXE: '/opt/miniconda3/bin/conda' })
+  })
+
+  it('treats an empty stack slot as a hole', () => {
+    const env: Record<string, string> = {
+      CONDA_SHLVL: '2',
+      CONDA_PREFIX: '/opt/miniconda3/envs/ml',
+      CONDA_PREFIX_1: ''
+    }
+
+    dropIncoherentCondaActivationEnv(env, 'linux')
+
+    expect(env).toEqual({})
+  })
+
+  it('does not let a bogus CONDA_SHLVL outrun the keys present', () => {
+    // Why: the scan stops at the first hole, so depth is bounded by the env, not the value.
+    const env: Record<string, string> = { CONDA_SHLVL: '2000000000', CONDA_PREFIX: '/opt/conda' }
+
+    dropIncoherentCondaActivationEnv(env, 'linux')
+
+    expect(env).toEqual({})
+  })
+
   it("leaves conda's own CONDA_SHLVL=0 hook-ran-nothing state alone", () => {
     const env: Record<string, string> = { CONDA_SHLVL: '0', CONDA_EXE: '/opt/conda/bin/conda' }
 
@@ -104,6 +141,31 @@ describe('dropIncoherentCondaActivationEnv', () => {
       CONDA_Default_Env: 'base',
       Conda_Prefix_1: '/opt/miniconda3'
     })
+  })
+
+  it('resolves stack slots case-insensitively on win32', () => {
+    const complete: Record<string, string> = {
+      Conda_Shlvl: '2',
+      Conda_Prefix: 'C:\\miniconda3\\envs\\ml',
+      Conda_Prefix_1: 'C:\\miniconda3'
+    }
+
+    dropIncoherentCondaActivationEnv(complete, 'win32')
+
+    expect(complete).toEqual({
+      Conda_Shlvl: '2',
+      Conda_Prefix: 'C:\\miniconda3\\envs\\ml',
+      Conda_Prefix_1: 'C:\\miniconda3'
+    })
+
+    const holed: Record<string, string> = {
+      Conda_Shlvl: '2',
+      Conda_Prefix: 'C:\\miniconda3\\envs\\ml'
+    }
+
+    dropIncoherentCondaActivationEnv(holed, 'win32')
+
+    expect(holed).toEqual({})
   })
 
   it('leaves an environment with no conda state alone', () => {
