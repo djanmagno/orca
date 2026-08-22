@@ -80,7 +80,7 @@ describe('agent session resume metadata', () => {
       { key: 'session_id', id: 's1', transcriptPath: '/tmp/prime-session.jsonl' },
       ['prime-agent', '--resume', '/tmp/prime-session.jsonl']
     ],
-    ['copilot', { key: 'session_id', id: 's1' }, ['copilot', '--resume', 's1']]
+    ['copilot', { key: 'session_id', id: 's1' }, ['copilot', '--resume=s1']]
   ] as const)('builds %s resume argv', (agent, providerSession, expected) => {
     expect(getAgentResumeArgv(agent, providerSession)).toEqual(expected)
   })

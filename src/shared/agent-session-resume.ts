@@ -282,9 +282,9 @@ export function getAgentResumeArgv(
       return providerSession.key === 'session_id'
         ? ['omp', '--resume', ompResumeFilePath?.trim() || id]
         : null
-    // Why: Copilot documents `--resume=<id>`, but the space form resumes the same
-    // session and keeps the locator its own argv entry for the resume-argv drop.
+    // Why: the joined form is the only one Copilot documents, and it keeps this
+    // argv byte-identical to buildAgentResumeInvocation's AI Vault command.
     case 'copilot':
-      return providerSession.key === 'session_id' ? ['copilot', '--resume', id] : null
+      return providerSession.key === 'session_id' ? ['copilot', `--resume=${id}`] : null
   }
 }
