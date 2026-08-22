@@ -282,8 +282,9 @@ export function getAgentResumeArgv(
       return providerSession.key === 'session_id'
         ? ['omp', '--resume', ompResumeFilePath?.trim() || id]
         : null
-    // Why: the joined form is the only one Copilot documents, and it keeps this
-    // argv byte-identical to buildAgentResumeInvocation's AI Vault command.
+    // Why: the joined form is the only one Copilot documents, and it matches the
+    // flag spelling buildAgentResumeInvocation bakes into persisted AI Vault
+    // resume commands, so local and remote resumes agree on one spelling.
     case 'copilot':
       return providerSession.key === 'session_id' ? ['copilot', `--resume=${id}`] : null
   }
