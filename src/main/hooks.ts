@@ -8,6 +8,7 @@ import { getHookRuntimeTarget, getHookWslContext } from './hook-runtime-target'
 import { getSetupEnvVars } from './setup-hook-env-vars'
 import { iterateLfScriptLines } from './setup-runner-script-text'
 import { promptGuardShellEnv } from './git/runner'
+import { dropIncoherentCondaActivationEnv } from './pty/conda-activation-env'
 import { toLinuxPath } from './wsl'
 import { addWorktreeSetupWslInteropEnv } from './pty/wsl-orca-env'
 import type { HookRuntimeTarget } from './hook-runtime-target'
@@ -145,6 +146,10 @@ export function runHook(
     // Why: wsl.exe only imports Windows env vars named in WSLENV; without
     // registering them the setup vars never reach the guest (#9206).
     addWorktreeSetupWslInteropEnv(hookEnv)
+    // Why here too: setup scripts source conda just like a shell rc does, and a
+    // half-activated inherited env fails as an opaque hook error (#14195). No
+    // WSLENV registration: a Windows conda prefix is meaningless in the distro.
+    dropIncoherentCondaActivationEnv(hookEnv)
 
     return new Promise((resolve) => {
       let child: ReturnType<typeof execFile> | null = null
@@ -203,6 +208,9 @@ export function runHook(
     })
   }
 
+  const shellHookEnv: NodeJS.ProcessEnv = { ...process.env, ...getSetupEnvVars(repo, cwd) }
+  dropIncoherentCondaActivationEnv(shellHookEnv)
+
   return new Promise((resolve) => {
     exec(
       script,
@@ -211,10 +219,7 @@ export function runHook(
         timeout: HOOK_TIMEOUT,
         shell: getHookShell(),
         // Why: hooks run unattended; block Git Credential Manager's interactive prompt while keeping cached auth (issue #7652).
-        env: promptGuardShellEnv({
-          ...process.env,
-          ...getSetupEnvVars(repo, cwd)
-        })
+        env: promptGuardShellEnv(shellHookEnv)
       },
       (error, stdout, stderr) => {
         if (error) {
