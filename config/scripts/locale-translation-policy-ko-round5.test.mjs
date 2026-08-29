@@ -1,8 +1,59 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import { repairTranslatedValue } from './locale-translation-policy.mjs'
 
+const readLocale = (locale) =>
+  JSON.parse(
+    readFileSync(new URL(`../../src/renderer/src/i18n/locales/${locale}.json`, import.meta.url), 'utf8')
+  )
+
+const orcaAccount = (locale) => readLocale(locale).auto.components.settings.orcaAccount
+const orcaAccountKeyPrefix = 'auto.components.settings.orcaAccount.'
+const orcaAccountKorean = {
+  connected: '연결됨',
+  reconnectRequired: '세션이 만료되었습니다. 클라우드 기능을 사용하려면 다시 로그인하세요.',
+  unavailable: '이 빌드에서는 Orca 로그인을 사용할 수 없습니다.',
+  signedOut: 'Artifacts와 Orca Relay를 포함한 클라우드 기능을 사용하려면 로그인하세요.',
+  checking: '계정 상태 확인 중…',
+  account: 'Orca 계정',
+  signOut: '로그아웃',
+  signingIn: '로그인 중…',
+  signInAgain: '다시 로그인',
+  signIn: 'Orca에 로그인',
+  title: 'Orca 계정',
+  description: '작업을 즉시 공유하고 어디서든 Orca Mobile에서 데스크톱에 연결하세요.',
+  searchDescription: 'Artifacts 및 Orca Relay에서 사용하는 계정에 로그인하거나 로그아웃합니다.',
+  benefitsTitle: '계정에 포함된 기능',
+  artifactsTitle: 'Artifact 공유',
+  artifactsDescription: 'HTML 및 Markdown 파일을 게시하고 Orca에서 공유된 모든 링크를 관리하세요.',
+  relayTitle: 'Orca Relay',
+  relayDescription: '모바일 네트워크 또는 모든 Wi-Fi에서 Orca Mobile을 이 데스크톱에 연결하세요.',
+  skillsTitle: '스킬 공유',
+  skillsDescription: '비공개 링크로 하나의 스킬 또는 전체 세트를 공유하고 사용하는 모든 컴퓨터에 설치하세요.'
+}
+
 describe('locale-translation-policy ko round 5', () => {
+  it('translates every Orca Account setting without falling back to English', () => {
+    const korean = orcaAccount('ko')
+
+    expect(korean).toEqual(orcaAccountKorean)
+  })
+
+  it('preserves every reviewed Orca Account translation during catalog repair', () => {
+    const english = orcaAccount('en')
+    for (const [key, expected] of Object.entries(orcaAccountKorean)) {
+      expect(
+        repairTranslatedValue({
+          key: `${orcaAccountKeyPrefix}${key}`,
+          enValue: english[key],
+          localeValue: english[key],
+          locale: 'ko'
+        })
+      ).toBe(expected)
+    }
+  })
+
   it('fixes Korean round 5 review, integration, and search keyword regressions', () => {
     expect(
       repairTranslatedValue({

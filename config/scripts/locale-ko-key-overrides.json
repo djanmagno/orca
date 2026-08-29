@@ -3524,6 +3524,66 @@
   "auto.components.settings.notifications.search.fa60d8e4ab": {
     "ko": "억제"
   },
+  "auto.components.settings.orcaAccount.connected": {
+    "ko": "연결됨"
+  },
+  "auto.components.settings.orcaAccount.reconnectRequired": {
+    "ko": "세션이 만료되었습니다. 클라우드 기능을 사용하려면 다시 로그인하세요."
+  },
+  "auto.components.settings.orcaAccount.unavailable": {
+    "ko": "이 빌드에서는 Orca 로그인을 사용할 수 없습니다."
+  },
+  "auto.components.settings.orcaAccount.signedOut": {
+    "ko": "Artifacts와 Orca Relay를 포함한 클라우드 기능을 사용하려면 로그인하세요."
+  },
+  "auto.components.settings.orcaAccount.checking": {
+    "ko": "계정 상태 확인 중…"
+  },
+  "auto.components.settings.orcaAccount.account": {
+    "ko": "Orca 계정"
+  },
+  "auto.components.settings.orcaAccount.signOut": {
+    "ko": "로그아웃"
+  },
+  "auto.components.settings.orcaAccount.signingIn": {
+    "ko": "로그인 중…"
+  },
+  "auto.components.settings.orcaAccount.signInAgain": {
+    "ko": "다시 로그인"
+  },
+  "auto.components.settings.orcaAccount.signIn": {
+    "ko": "Orca에 로그인"
+  },
+  "auto.components.settings.orcaAccount.title": {
+    "ko": "Orca 계정"
+  },
+  "auto.components.settings.orcaAccount.description": {
+    "ko": "작업을 즉시 공유하고 어디서든 Orca Mobile에서 데스크톱에 연결하세요."
+  },
+  "auto.components.settings.orcaAccount.searchDescription": {
+    "ko": "Artifacts 및 Orca Relay에서 사용하는 계정에 로그인하거나 로그아웃합니다."
+  },
+  "auto.components.settings.orcaAccount.benefitsTitle": {
+    "ko": "계정에 포함된 기능"
+  },
+  "auto.components.settings.orcaAccount.artifactsTitle": {
+    "ko": "Artifact 공유"
+  },
+  "auto.components.settings.orcaAccount.artifactsDescription": {
+    "ko": "HTML 및 Markdown 파일을 게시하고 Orca에서 공유된 모든 링크를 관리하세요."
+  },
+  "auto.components.settings.orcaAccount.relayTitle": {
+    "ko": "Orca Relay"
+  },
+  "auto.components.settings.orcaAccount.relayDescription": {
+    "ko": "모바일 네트워크 또는 모든 Wi-Fi에서 Orca Mobile을 이 데스크톱에 연결하세요."
+  },
+  "auto.components.settings.orcaAccount.skillsTitle": {
+    "ko": "스킬 공유"
+  },
+  "auto.components.settings.orcaAccount.skillsDescription": {
+    "ko": "비공개 링크로 하나의 스킬 또는 전체 세트를 공유하고 사용하는 모든 컴퓨터에 설치하세요."
+  },
   "auto.components.settings.privacy.search.10124159f1": {
     "ko": "개인정보"
   },
