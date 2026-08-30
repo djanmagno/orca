@@ -1,6 +1,7 @@
-import { useMemo } from 'react'
-import { Plug, Files, GitBranch, ListChecks, Workflow } from 'lucide-react'
+import { useEffect, useMemo } from 'react'
+import { Plug, Files, Factory, GitBranch, ListChecks, Workflow } from 'lucide-react'
 import { useAppStore } from '@/store'
+import { getProviderRuntimeContextKey } from '@/lib/provider-runtime-context'
 import { useRepoById } from '@/store/selectors'
 import { isFolderRepo } from '../../../../shared/repo-kind'
 import { parseWorkspaceKey } from '../../../../shared/workspace-scope'
@@ -45,6 +46,21 @@ export function useRightSidebarActivityItems({
   const isFolderWorkspace = activeWorkspaceScope?.type === 'folder'
   const isFolder = isFolderWorkspace || (activeRepo ? isFolderRepo(activeRepo) : false)
   const isSshRepo = Boolean(activeRepo?.connectionId)
+  const aiSweFactoryStatusEnabled = useAppStore((s) => s.aiSweFactoryStatus?.enabled ?? false)
+  const aiSweFactoryStatusContextKey = useAppStore((s) => s.aiSweFactoryStatusContextKey)
+  const activeRuntimeEnvironmentId = useAppStore((s) => s.settings?.activeRuntimeEnvironmentId)
+  const getAiSweFactoryStatus = useAppStore((s) => s.getAiSweFactoryStatus)
+  const providerRuntimeContextKey = getProviderRuntimeContextKey({ activeRuntimeEnvironmentId })
+  // Why: a stale status from a runtime the user has since switched away from must not
+  // leak into this tab's visibility — treat it as disabled until re-checked, matching
+  // the opt-in rule (decision #2: never show before the current runtime confirms it).
+  const aiSweFactoryEnabled =
+    aiSweFactoryStatusContextKey === providerRuntimeContextKey && aiSweFactoryStatusEnabled
+  useEffect(() => {
+    if (aiSweFactoryStatusContextKey !== providerRuntimeContextKey) {
+      void getAiSweFactoryStatus?.()
+    }
+  }, [aiSweFactoryStatusContextKey, providerRuntimeContextKey, getAiSweFactoryStatus])
   const pluginSystemEnabled = useAppStore((s) => s.settings?.pluginSystemEnabled === true)
   const pluginPanels = usePluginPanels()
   const visiblePluginPanels = useMemo(
@@ -61,6 +77,19 @@ export function useRightSidebarActivityItems({
 
   const activityItems = useMemo<ActivityBarItem[]>(
     () => [
+      ...(aiSweFactoryEnabled
+        ? [
+            {
+              id: 'ai-swe-factory' as const,
+              icon: Factory,
+              title: translate(
+                'auto.components.right.sidebar.index.aiSweFactory',
+                'AI SWE Factory'
+              ),
+              shortcut: ''
+            }
+          ]
+        : []),
       {
         id: 'explorer',
         icon: Files,
@@ -121,7 +150,8 @@ export function useRightSidebarActivityItems({
       pluginPanelErrors,
       visiblePluginPanels,
       portsShortcut,
-      sourceControlShortcut
+      sourceControlShortcut,
+      aiSweFactoryEnabled
     ]
   )
 

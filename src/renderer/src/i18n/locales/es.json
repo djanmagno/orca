@@ -296,6 +296,10 @@
         "linear": {
           "37d36984d0": "La conexión de Linear fue reemplazada por una solicitud más reciente."
         },
+        "aiSweFactory": {
+          "boardLoadError": "No se pudo cargar el tablero de AI SWE Factory.",
+          "taskDetailLoadError": "No se pudo cargar la tarea de AI SWE Factory."
+        },
         "orca": {
           "profiles": {
             "612f7f6861": "Error al crear perfil",
@@ -6173,6 +6177,19 @@
           "compareBaseRepositoryDefault": "Predeterminada del repositorio",
           "compareBaseBranchUpstream": "Upstream de la rama"
         },
+        "AiSweFactoryIntegrationCard": {
+          "description": "Lee tareas desde un tablero externo de AI SWE Factory.",
+          "statusConfigured": "Configurado",
+          "statusNotConfigured": "No configurado",
+          "urlLabel": "URL de la API de Factory",
+          "apiKeyLabel": "Clave de API (opcional)",
+          "enabledLabel": "Mostrar tablero en la barra lateral",
+          "saving": "Guardando...",
+          "save": "Guardar conexión",
+          "credentialErrorDecrypt": "No se pudo descifrar la credencial guardada de AI SWE Factory. Autorice el acceso al llavero o vuelva a conectar AI SWE Factory.",
+          "credentialErrorInvalidUrl": "Introduzca una URL HTTP o HTTPS válida.",
+          "credentialErrorGeneric": "No se pudo conectar con AI SWE Factory. Revise la configuración de conexión."
+        },
         "HiddenExperimentalGroup": {
           "7c4e18d2f6": "Activa los gestos de captura del fallo de negrita en esta máquina: {{samplingShortcut}} inicia una ráfaga de muestreo; {{captureShortcut}} captura evidencia del panel en disco.",
           "b09f24a51d": "Diagnósticos de renderizado del terminal",
@@ -11133,7 +11150,8 @@
             "fc3095d2ed": "explorador",
             "aiVaultSessionHistory": "Agentes",
             "folderWorkspaces": "Worktrees adjuntos",
-            "parentPrChecks": "Checks de PR"
+            "parentPrChecks": "Checks de PR",
+            "aiSweFactory": "AI SWE Factory"
           },
           "right": {
             "panel": {
@@ -11329,6 +11347,26 @@
                 }
               }
             }
+          },
+          "AiSweFactoryTaskDetailSheet": {
+            "title": "Tarea de AI SWE Factory",
+            "description": "Detalles de solo lectura de la tarea seleccionada de AI SWE Factory.",
+            "loadError": "No se pudo cargar esta tarea.",
+            "pr": "PR #{{value0}}",
+            "repo": "Repositorio",
+            "branch": "Rama",
+            "worktree": "Worktree",
+            "created": "Creada",
+            "updated": "Actualizada",
+            "scope": "Alcance",
+            "outOfScope": "Fuera de alcance",
+            "acceptanceCriteria": "Criterios de aceptación",
+            "questions": "Preguntas",
+            "runs": "Ejecuciones"
+          },
+          "AiSweFactoryBoardPanel": {
+            "loadError": "No se pudo cargar el tablero de AI SWE Factory.",
+            "liveUpdatesUnavailable": "Las actualizaciones en tiempo real no están disponibles en esta conexión. Actualiza para ver los estados de tareas más recientes."
           },
           "AiVaultPanel": {
             "resumeCommandCopied": "Comando para reanudar copiado",

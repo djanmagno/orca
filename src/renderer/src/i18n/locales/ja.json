@@ -296,6 +296,10 @@
         "linear": {
           "37d36984d0": "Linear 接続は新規リクエストに置き換えられました。"
         },
+        "aiSweFactory": {
+          "boardLoadError": "AI SWE Factory ボードを読み込めませんでした。",
+          "taskDetailLoadError": "AI SWE Factory タスクを読み込めませんでした。"
+        },
         "orca": {
           "profiles": {
             "612f7f6861": "プロファイルの作成に失敗しました",
@@ -6195,6 +6199,19 @@
           "compareBaseRepositoryDefault": "リポジトリ既定",
           "compareBaseBranchUpstream": "ブランチの upstream"
         },
+        "AiSweFactoryIntegrationCard": {
+          "description": "外部の AI SWE Factory ボードからタスクを読み込みます。",
+          "statusConfigured": "設定済み",
+          "statusNotConfigured": "未設定",
+          "urlLabel": "Factory API の URL",
+          "apiKeyLabel": "API キー（任意）",
+          "enabledLabel": "サイドバーにボードを表示",
+          "saving": "保存中...",
+          "save": "接続を保存",
+          "credentialErrorDecrypt": "保存された AI SWE Factory の認証情報を復号できませんでした。キーチェーンへのアクセスを許可するか、AI SWE Factory を再接続してください。",
+          "credentialErrorInvalidUrl": "有効な HTTP または HTTPS の URL を入力してください。",
+          "credentialErrorGeneric": "AI SWE Factory に接続できませんでした。接続設定を確認してください。"
+        },
         "HiddenExperimentalGroup": {
           "7c4e18d2f6": "このマシンで太字グリッチのキャプチャジェスチャーを有効にします。{{samplingShortcut}} でサンプリングバーストを開始し、{{captureShortcut}} でペインの証拠をディスクに保存します。",
           "b09f24a51d": "ターミナル描画診断",
@@ -11133,7 +11150,8 @@
             "fc3095d2ed": "エクスプローラ",
             "aiVaultSessionHistory": "Agent",
             "folderWorkspaces": "添付ワークツリー",
-            "parentPrChecks": "PR チェック"
+            "parentPrChecks": "PR チェック",
+            "aiSweFactory": "AI SWE Factory"
           },
           "right": {
             "panel": {
@@ -11329,6 +11347,26 @@
                 }
               }
             }
+          },
+          "AiSweFactoryTaskDetailSheet": {
+            "title": "AI SWE Factory タスク",
+            "description": "選択した AI SWE Factory タスクの読み取り専用の詳細。",
+            "loadError": "このタスクを読み込めませんでした。",
+            "pr": "PR #{{value0}}",
+            "repo": "リポジトリ",
+            "branch": "ブランチ",
+            "worktree": "ワークツリー",
+            "created": "作成日時",
+            "updated": "更新日時",
+            "scope": "スコープ",
+            "outOfScope": "スコープ外",
+            "acceptanceCriteria": "受け入れ基準",
+            "questions": "質問",
+            "runs": "実行"
+          },
+          "AiSweFactoryBoardPanel": {
+            "loadError": "AI SWE Factory ボードを読み込めませんでした。",
+            "liveUpdatesUnavailable": "この接続ではリアルタイム更新を利用できません。最新のタスク状態を確認するには更新してください。"
           },
           "AiVaultPanel": {
             "resumeCommandCopied": "再開コマンドをコピーしました",

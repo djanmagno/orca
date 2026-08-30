@@ -9,6 +9,13 @@ describe('normalizeRightSidebarRoute', () => {
     })
   })
 
+  it('preserves the AI SWE Factory board route', () => {
+    expect(normalizeRightSidebarRoute('ai-swe-factory')).toEqual({
+      rightSidebarTab: 'ai-swe-factory',
+      rightSidebarExplorerView: 'files'
+    })
+  })
+
   it('still normalizes invalid tabs to Explorer files', () => {
     expect(normalizeRightSidebarRoute('missing')).toEqual({
       rightSidebarTab: 'explorer',

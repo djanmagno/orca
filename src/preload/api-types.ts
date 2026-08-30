@@ -16,6 +16,7 @@ import type {
   RateLimitsApi
 } from './api/agent-usage-api'
 import type { AiVaultApi } from './api/ai-vault-api'
+import type { AiSweFactoryApi } from './api/ai-swe-factory-api'
 import type { AppApi, E2EApi, PlatformApi } from './api/app-api'
 import type { AutomationsApi } from './api/automation-api'
 import type { BrowserApi } from './api/browser-api'
@@ -90,6 +91,7 @@ export type PreloadApi = {
   bitbucket: BitbucketApi
   linear: LinearApi
   jira: JiraApi
+  aiSweFactory: AiSweFactoryApi
   starNag: StarNagApi
   telemetryTrack: TelemetryApi['telemetryTrack']
   telemetrySetOptIn: TelemetryApi['telemetrySetOptIn']
