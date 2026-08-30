@@ -1071,6 +1071,14 @@ import {
   testConnection as testJiraConnection
 } from '../jira/client'
 import {
+  getAiSweFactoryConnectionStatus,
+  saveAiSweFactoryConnection,
+  setAiSweFactoryEnabled
+} from '../ai-swe-factory/credential-store'
+import { getAiSweFactoryBoard, getAiSweFactoryTaskDetail } from '../ai-swe-factory/client'
+import { getAiSweFactorySseConnectionManager } from '../ai-swe-factory/sse-connection-manager'
+import type { FactoryEvent } from '../../shared/ai-swe-factory-types'
+import {
   addIssueComment as addJiraIssueComment,
   createIssue as createJiraIssue,
   getIssue as getJiraIssue,
@@ -40655,6 +40663,38 @@ export class OrcaRuntimeService {
 
   linearTeamMembers(teamId: string, workspaceId?: string): ReturnType<typeof getLinearTeamMembers> {
     return getLinearTeamMembers(teamId, workspaceId)
+  }
+
+  // ── AI SWE Factory integration ──
+
+  aiSweFactorySaveConnection(args: {
+    baseUrl: string
+    apiKey?: string | null
+  }): ReturnType<typeof saveAiSweFactoryConnection> {
+    return saveAiSweFactoryConnection(args)
+  }
+
+  aiSweFactoryStatus(): ReturnType<typeof getAiSweFactoryConnectionStatus> {
+    return getAiSweFactoryConnectionStatus()
+  }
+
+  aiSweFactorySetEnabled(enabled: boolean): ReturnType<typeof setAiSweFactoryEnabled> {
+    return setAiSweFactoryEnabled(enabled)
+  }
+
+  aiSweFactoryGetBoard(): ReturnType<typeof getAiSweFactoryBoard> {
+    return getAiSweFactoryBoard()
+  }
+
+  aiSweFactoryGetTaskDetail(id: string): ReturnType<typeof getAiSweFactoryTaskDetail> {
+    return getAiSweFactoryTaskDetail(id)
+  }
+
+  // Why a fresh id per call (never reused across subscribers): the connection manager
+  // keys listeners by this id, so a stable/shared id would let one subscriber's
+  // teardown silently drop another's listener.
+  aiSweFactorySubscribeEvents(listener: (event: FactoryEvent) => void): () => void {
+    return getAiSweFactorySseConnectionManager().subscribe(randomUUID(), listener)
   }
 
   // ── Jira integration ──

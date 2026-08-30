@@ -299,6 +299,10 @@
         "linear": {
           "37d36984d0": "Linear 连接已被新的请求取代。"
         },
+        "aiSweFactory": {
+          "boardLoadError": "无法加载 AI SWE Factory 看板。",
+          "taskDetailLoadError": "无法加载 AI SWE Factory 任务。"
+        },
         "orca": {
           "profiles": {
             "612f7f6861": "创建配置文件失败",
@@ -6193,6 +6197,19 @@
           "compareBaseRepositoryDefault": "仓库默认",
           "compareBaseBranchUpstream": "分支上游"
         },
+        "AiSweFactoryIntegrationCard": {
+          "description": "从外部 AI SWE Factory 看板读取任务。",
+          "statusConfigured": "已配置",
+          "statusNotConfigured": "未配置",
+          "urlLabel": "Factory API URL",
+          "apiKeyLabel": "API 密钥（可选）",
+          "enabledLabel": "在侧边栏中显示看板",
+          "saving": "保存中...",
+          "save": "保存连接",
+          "credentialErrorDecrypt": "无法解密已保存的 AI SWE Factory 凭据。请授权访问钥匙串，或重新连接 AI SWE Factory。",
+          "credentialErrorInvalidUrl": "请输入有效的 HTTP 或 HTTPS URL。",
+          "credentialErrorGeneric": "无法连接到 AI SWE Factory。请检查连接设置。"
+        },
         "HiddenExperimentalGroup": {
           "7c4e18d2f6": "在本机启用粗体故障捕获手势：{{samplingShortcut}} 开始采样突发；{{captureShortcut}} 将窗格证据捕获到磁盘。",
           "b09f24a51d": "终端渲染诊断",
@@ -11176,7 +11193,8 @@
             "fc3095d2ed": "资源管理器",
             "aiVaultSessionHistory": "智能体",
             "folderWorkspaces": "已附加的工作树",
-            "parentPrChecks": "PR 检查"
+            "parentPrChecks": "PR 检查",
+            "aiSweFactory": "AI SWE Factory"
           },
           "right": {
             "panel": {
@@ -11372,6 +11390,26 @@
                 }
               }
             }
+          },
+          "AiSweFactoryTaskDetailSheet": {
+            "title": "AI SWE Factory 任务",
+            "description": "所选 AI SWE Factory 任务的只读详情。",
+            "loadError": "无法加载此任务。",
+            "pr": "PR #{{value0}}",
+            "repo": "仓库",
+            "branch": "分支",
+            "worktree": "工作树",
+            "created": "创建时间",
+            "updated": "更新时间",
+            "scope": "范围",
+            "outOfScope": "范围外",
+            "acceptanceCriteria": "验收标准",
+            "questions": "问题",
+            "runs": "运行"
+          },
+          "AiSweFactoryBoardPanel": {
+            "loadError": "无法加载 AI SWE Factory 看板。",
+            "liveUpdatesUnavailable": "此连接不支持实时更新。请刷新以查看最新的任务状态。"
           },
           "AiVaultPanel": {
             "resumeCommandCopied": "恢复命令已复制",

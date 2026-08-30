@@ -488,6 +488,10 @@
         "linear": {
           "37d36984d0": "Linear connection was superseded by a newer request."
         },
+        "aiSweFactory": {
+          "boardLoadError": "Unable to load the AI SWE Factory board.",
+          "taskDetailLoadError": "Unable to load AI SWE Factory task."
+        },
         "orca": {
           "profiles": {
             "612f7f6861": "Failed to create profile",
@@ -7157,6 +7161,19 @@
           "compareBaseRepositoryDefault": "Repository default",
           "compareBaseBranchUpstream": "Branch upstream"
         },
+        "AiSweFactoryIntegrationCard": {
+          "description": "Read tasks from an external AI SWE Factory board.",
+          "statusConfigured": "Configured",
+          "statusNotConfigured": "Not configured",
+          "urlLabel": "Factory API URL",
+          "apiKeyLabel": "API key (optional)",
+          "enabledLabel": "Show board in the sidebar",
+          "saving": "Saving...",
+          "save": "Save connection",
+          "credentialErrorDecrypt": "Could not decrypt the saved AI SWE Factory credential. Approve Keychain access or reconnect AI SWE Factory.",
+          "credentialErrorInvalidUrl": "Enter a valid HTTP or HTTPS URL.",
+          "credentialErrorGeneric": "Could not connect to AI SWE Factory. Check the connection settings."
+        },
         "HiddenExperimentalGroup": {
           "7c4e18d2f6": "Arms the bold-glitch capture gestures on this machine: {{samplingShortcut}} starts a sampling burst; {{captureShortcut}} captures pane evidence to disk.",
           "b09f24a51d": "Terminal render diagnostics",
@@ -12398,7 +12415,8 @@
             "fc3095d2ed": "explorer",
             "aiVaultSessionHistory": "Agents",
             "folderWorkspaces": "Attached worktrees",
-            "parentPrChecks": "PR Checks"
+            "parentPrChecks": "PR Checks",
+            "aiSweFactory": "AI SWE Factory"
           },
           "right": {
             "panel": {
@@ -12676,6 +12694,26 @@
                 }
               }
             }
+          },
+          "AiSweFactoryTaskDetailSheet": {
+            "title": "AI SWE Factory task",
+            "description": "Read-only details for the selected AI SWE Factory task.",
+            "loadError": "Unable to load this task.",
+            "pr": "PR #{{value0}}",
+            "repo": "Repo",
+            "branch": "Branch",
+            "worktree": "Worktree",
+            "created": "Created",
+            "updated": "Updated",
+            "scope": "Scope",
+            "outOfScope": "Out of scope",
+            "acceptanceCriteria": "Acceptance criteria",
+            "questions": "Questions",
+            "runs": "Runs"
+          },
+          "AiSweFactoryBoardPanel": {
+            "loadError": "Unable to load the AI SWE Factory board.",
+            "liveUpdatesUnavailable": "Live updates are unavailable on this connection. Refresh to see the latest task states."
           },
           "AiVaultPanel": {
             "resumeCommandCopied": "Resume command copied",

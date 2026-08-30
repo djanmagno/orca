@@ -104,6 +104,11 @@ import type { GitHubWorkItem, ListWorkItemsResult } from '../shared/github/work-
 import type { GhosttyImportPreview } from '../shared/global-settings-types'
 import type { GitHubCreateIssueResult } from '../shared/issue-mutation-types'
 import type { JiraProjectStatusOrder } from '../shared/jira-types'
+import type {
+  AiSweFactoryConnectionStatus,
+  FactoryBoard,
+  FactoryTaskDetail
+} from '../shared/ai-swe-factory-types'
 import type { LinearProjectDetail } from '../shared/linear/project-types'
 import type {
   NotificationDeliveryProbeResult,
@@ -556,6 +561,22 @@ const browserClientPageRendererRequests = createBrowserClientPageRendererRequest
 ipcRenderer.on('ui:findInBrowserPage', (_event, source: unknown) => {
   browserFindSubscriptions.dispatch(source)
 })
+
+// Why: ipcRenderer.invoke has no native cancellation; racing against the caller's
+// AbortSignal lets the renderer stop waiting on a stale request immediately.
+function raceAgainstAbort<T>(invocation: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) {
+    return invocation
+  }
+  if (signal.aborted) {
+    return Promise.reject(new DOMException('Aborted', 'AbortError'))
+  }
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = (): void => reject(new DOMException('Aborted', 'AbortError'))
+    signal.addEventListener('abort', onAbort, { once: true })
+    invocation.then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort))
+  })
+}
 
 // Custom APIs for renderer
 const api = {
@@ -2118,6 +2139,26 @@ const api = {
       projectKey: string
       siteId?: string
     }): Promise<JiraProjectStatusOrder> => ipcRenderer.invoke('jira:getProjectStatusOrder', args)
+  },
+
+  aiSweFactory: {
+    saveConnection: (args: {
+      baseUrl: string
+      apiKey?: string | null
+    }): Promise<AiSweFactoryConnectionStatus> =>
+      ipcRenderer.invoke('ai-swe-factory:saveConnection', args),
+    status: (): Promise<AiSweFactoryConnectionStatus> =>
+      ipcRenderer.invoke('ai-swe-factory:status'),
+    setEnabled: (args: { enabled: boolean }): Promise<AiSweFactoryConnectionStatus> =>
+      ipcRenderer.invoke('ai-swe-factory:setEnabled', args),
+    getBoard: (): Promise<FactoryBoard> => ipcRenderer.invoke('ai-swe-factory:getBoard'),
+    getTaskDetail: (
+      args: { id: string; requestId?: string },
+      signal?: AbortSignal
+    ): Promise<FactoryTaskDetail> =>
+      raceAgainstAbort(ipcRenderer.invoke('ai-swe-factory:getTaskDetail', args), signal),
+    cancelTaskDetail: (args: { requestId: string }): Promise<void> =>
+      ipcRenderer.invoke('ai-swe-factory:cancelTaskDetail', args)
   },
 
   starNag: {
