@@ -8,6 +8,7 @@ import {
 } from './credential-store'
 import { assertReadOnlyMethod } from './client'
 import { parseFactorySseChunks } from './sse-parser'
+import { cancelUnreadResponseBody } from '../lib/unread-response-body'
 
 type FactoryEventListener = (event: FactoryEvent) => void
 type Fetch = (url: string, init?: RequestInit) => Promise<Response>
@@ -135,6 +136,7 @@ export class AiSweFactorySseConnectionManager {
         signal: controller.signal
       })
       if (!response.ok || !response.body) {
+        await cancelUnreadResponseBody(response)
         throw new Error('request failed')
       }
       this.consecutiveFailures = 0

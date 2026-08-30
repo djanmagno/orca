@@ -10,6 +10,7 @@ import {
   getAiSweFactoryConnectionStatus,
   sanitizeAiSweFactoryError
 } from './credential-store'
+import { cancelUnreadResponseBody } from '../lib/unread-response-body'
 
 const TIMEOUT_MS = 15_000
 
@@ -109,6 +110,7 @@ export class AiSweFactoryClient {
         }
       )
       if (!response.ok) {
+        await cancelUnreadResponseBody(response)
         throw new Error('request failed')
       }
       return board.parse(await response.json())
@@ -135,6 +137,7 @@ export class AiSweFactoryClient {
         }
       )
       if (!response.ok) {
+        await cancelUnreadResponseBody(response)
         throw new Error('request failed')
       }
       return taskDetail.parse(await response.json())

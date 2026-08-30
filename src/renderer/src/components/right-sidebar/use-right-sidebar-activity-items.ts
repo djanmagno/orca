@@ -46,7 +46,7 @@ export function useRightSidebarActivityItems({
   const isFolderWorkspace = activeWorkspaceScope?.type === 'folder'
   const isFolder = isFolderWorkspace || (activeRepo ? isFolderRepo(activeRepo) : false)
   const isSshRepo = Boolean(activeRepo?.connectionId)
-  const aiSweFactoryStatusEnabled = useAppStore((s) => s.aiSweFactoryStatus.enabled)
+  const aiSweFactoryStatusEnabled = useAppStore((s) => s.aiSweFactoryStatus?.enabled ?? false)
   const aiSweFactoryStatusContextKey = useAppStore((s) => s.aiSweFactoryStatusContextKey)
   const activeRuntimeEnvironmentId = useAppStore((s) => s.settings?.activeRuntimeEnvironmentId)
   const getAiSweFactoryStatus = useAppStore((s) => s.getAiSweFactoryStatus)
@@ -58,7 +58,7 @@ export function useRightSidebarActivityItems({
     aiSweFactoryStatusContextKey === providerRuntimeContextKey && aiSweFactoryStatusEnabled
   useEffect(() => {
     if (aiSweFactoryStatusContextKey !== providerRuntimeContextKey) {
-      void getAiSweFactoryStatus()
+      void getAiSweFactoryStatus?.()
     }
   }, [aiSweFactoryStatusContextKey, providerRuntimeContextKey, getAiSweFactoryStatus])
   const pluginSystemEnabled = useAppStore((s) => s.settings?.pluginSystemEnabled === true)
