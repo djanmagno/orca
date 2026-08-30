@@ -7172,7 +7172,8 @@
           "save": "Save connection",
           "credentialErrorDecrypt": "Could not decrypt the saved AI SWE Factory credential. Approve Keychain access or reconnect AI SWE Factory.",
           "credentialErrorInvalidUrl": "Enter a valid HTTP or HTTPS URL.",
-          "credentialErrorGeneric": "Could not connect to AI SWE Factory. Check the connection settings."
+          "credentialErrorGeneric": "Could not connect to AI SWE Factory. Check the connection settings.",
+          "urlPlaceholder": "http://localhost:4173"
         },
         "HiddenExperimentalGroup": {
           "7c4e18d2f6": "Arms the bold-glitch capture gestures on this machine: {{samplingShortcut}} starts a sampling burst; {{captureShortcut}} captures pane evidence to disk.",

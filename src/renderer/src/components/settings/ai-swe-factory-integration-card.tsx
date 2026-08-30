@@ -100,7 +100,10 @@ export function AiSweFactoryIntegrationCard(): React.JSX.Element {
             type="url"
             value={baseUrl}
             onChange={(event) => setBaseUrl(event.target.value)}
-            placeholder="http://localhost:4173"
+            placeholder={translate(
+              'auto.components.settings.AiSweFactoryIntegrationCard.urlPlaceholder',
+              'http://localhost:4173'
+            )}
           />
         </div>
         <div className="space-y-2">
