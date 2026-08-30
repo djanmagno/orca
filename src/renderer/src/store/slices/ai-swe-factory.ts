@@ -8,13 +8,13 @@ import type {
 import type { FactoryBoardColumnView } from '@/components/right-sidebar/ai-swe-factory-board-state'
 import { groupFactoryBoard } from '@/components/right-sidebar/ai-swe-factory-board-state'
 import {
+  aiSweFactoryGetBoard,
   aiSweFactoryGetTaskDetail,
   aiSweFactorySaveConnection,
   aiSweFactorySetEnabled,
   aiSweFactoryStatus,
   subscribeAiSweFactoryEvents
 } from '@/runtime/runtime-ai-swe-factory-client'
-import { aiSweFactoryGetBoard } from '@/runtime/runtime-ai-swe-factory-client'
 import { hasRuntimeRpcErrorCode } from '@/runtime/runtime-rpc-client'
 import type { StateCreator } from 'zustand'
 import type { AppState } from '../types'

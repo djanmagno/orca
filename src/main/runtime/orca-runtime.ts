@@ -40671,7 +40671,9 @@ export class OrcaRuntimeService {
     baseUrl: string
     apiKey?: string | null
   }): ReturnType<typeof saveAiSweFactoryConnection> {
-    return saveAiSweFactoryConnection(args)
+    const result = saveAiSweFactoryConnection(args)
+    getAiSweFactorySseConnectionManager().notifyConfigChanged()
+    return result
   }
 
   aiSweFactoryStatus(): ReturnType<typeof getAiSweFactoryConnectionStatus> {
@@ -40679,7 +40681,9 @@ export class OrcaRuntimeService {
   }
 
   aiSweFactorySetEnabled(enabled: boolean): ReturnType<typeof setAiSweFactoryEnabled> {
-    return setAiSweFactoryEnabled(enabled)
+    const result = setAiSweFactoryEnabled(enabled)
+    getAiSweFactorySseConnectionManager().notifyConfigChanged()
+    return result
   }
 
   aiSweFactoryGetBoard(): ReturnType<typeof getAiSweFactoryBoard> {

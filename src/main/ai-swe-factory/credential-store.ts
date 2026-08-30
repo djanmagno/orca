@@ -11,7 +11,6 @@ import {
   readStoredCredentialToken,
   writeEncryptedCredential
 } from '../integration-credential-file'
-import { getAiSweFactorySseConnectionManager } from './sse-connection-manager'
 
 type StoredConnection = { version: 1; baseUrl: string; enabled: boolean }
 let cachedConnection: StoredConnection | null | undefined
@@ -66,6 +65,12 @@ export function sanitizeAiSweFactoryLog(message: string): string {
     .replace(/[\w-]+\.[\w-]+\.?[\w-]*/g, (match) => (match.length > 24 ? '[token]' : match))
 }
 
+// Why the caller must notify the SSE manager itself: sse-connection-manager.ts
+// imports from this module to read the current connection/api key, so calling
+// it back from here would form an import cycle. Every caller of
+// saveAiSweFactoryConnection/setAiSweFactoryEnabled must follow up with
+// getAiSweFactorySseConnectionManager().notifyConfigChanged() (see
+// src/main/ipc/ai-swe-factory.ts and src/main/runtime/orca-runtime.ts).
 export function saveAiSweFactoryConnection(args: {
   baseUrl: string
   apiKey?: string | null
@@ -81,7 +86,6 @@ export function saveAiSweFactoryConnection(args: {
     writeEncryptedCredential('AI SWE Factory', credentialPath(), args.apiKey.trim())
     credentialError = null
   }
-  getAiSweFactorySseConnectionManager().notifyConfigChanged()
   return getAiSweFactoryConnectionStatus()
 }
 
@@ -92,7 +96,6 @@ export function setAiSweFactoryEnabled(enabled: boolean): AiSweFactoryConnection
   }
   cachedConnection = { ...current, enabled }
   writeFileSync(connectionPath(), JSON.stringify(cachedConnection), { mode: 0o600 })
-  getAiSweFactorySseConnectionManager().notifyConfigChanged()
   return getAiSweFactoryConnectionStatus()
 }
 

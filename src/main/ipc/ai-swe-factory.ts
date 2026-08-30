@@ -6,6 +6,7 @@ import {
 } from '../ai-swe-factory/credential-store'
 import { AI_SWE_FACTORY_INVALID_URL_MESSAGE } from '../../shared/ai-swe-factory-types'
 import { getAiSweFactoryBoard, getAiSweFactoryTaskDetail } from '../ai-swe-factory/client'
+import { getAiSweFactorySseConnectionManager } from '../ai-swe-factory/sse-connection-manager'
 import { AiSweFactoryCancellableRequests } from './ai-swe-factory-cancellable-requests'
 
 const taskDetailRequests = new AiSweFactoryCancellableRequests()
@@ -23,10 +24,12 @@ export function registerAiSweFactoryHandlers(): void {
         }
       }
       try {
-        return saveAiSweFactoryConnection({
+        const result = saveAiSweFactoryConnection({
           baseUrl: args.baseUrl,
           apiKey: typeof args.apiKey === 'string' ? args.apiKey : null
         })
+        getAiSweFactorySseConnectionManager().notifyConfigChanged()
+        return result
       } catch {
         return {
           configured: false,
@@ -38,9 +41,11 @@ export function registerAiSweFactoryHandlers(): void {
     }
   )
   ipcMain.handle('ai-swe-factory:status', () => getAiSweFactoryConnectionStatus())
-  ipcMain.handle('ai-swe-factory:setEnabled', (_event, args: { enabled?: unknown }) =>
-    setAiSweFactoryEnabled(args?.enabled === true)
-  )
+  ipcMain.handle('ai-swe-factory:setEnabled', (_event, args: { enabled?: unknown }) => {
+    const result = setAiSweFactoryEnabled(args?.enabled === true)
+    getAiSweFactorySseConnectionManager().notifyConfigChanged()
+    return result
+  })
   ipcMain.handle('ai-swe-factory:getBoard', () => getAiSweFactoryBoard())
   ipcMain.handle(
     'ai-swe-factory:getTaskDetail',
